@@ -17,6 +17,8 @@ public:
 
 	void print();
 
+	size_t dim() const;
+
 private:
 	std::vector<std::vector<T>> m_matrix;
 };
@@ -44,7 +46,7 @@ void MatrixGenerator<T>::initWithReal(T from, T to)
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_real_distribution<T> dis(from, to);
 
-	size_t size = m_matrix.capacity();
+	size_t size = m_matrix.size();
 
 	for (size_t i = 0; i < size; ++i) {
 		for (size_t j = 0; j < size; ++j) {
@@ -60,7 +62,7 @@ void MatrixGenerator<T>::initWithInteger(T from, T to)
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_int_distribution<T> dis(from, to);
 
-	size_t size = m_matrix.capacity();
+	size_t size = m_matrix.size();
 
 	for (size_t i = 0; i < size; ++i) {
 		for (size_t j = 0; j < size; ++j) {
@@ -78,6 +80,12 @@ void MatrixGenerator<T>::print()
 		}
 		std::cout << "\n";
 	}
+}
+
+template<typename T>
+size_t MatrixGenerator<T>::dim() const
+{
+	return m_matrix.size();
 }
 
 #endif // !MATRIXGENERATOR_H

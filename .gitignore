@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+Zadanie1/Zadanie1/.vs/*
+Zadanie1/Zadanie1/Zadanie1.aps
+Zadanie1/Zadanie1/x64
