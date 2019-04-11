@@ -22,7 +22,7 @@ void print(const std::array<std::array<T, dim>, dim>& matrix)
 }
 
 int main() {
-	const size_t arraySize = 5;
+	/*const size_t arraySize = 5;
 	using type = int;
 	MatrixGenerator<type, arraySize> generator;
 	generator.initWithInteger(0, 5);
@@ -35,41 +35,27 @@ int main() {
 	print<type, arraySize>(matrix[0]);
 	print<type, arraySize>(matrix[1]);
 	auto result = performAddProgram<type>(device, matrix[0], matrix[1]);
-	print<type, arraySize>(result);
-
-	/*const size_t arraySize = 3;
-	MatrixGenerator<int, arraySize> generator;
-	generator.initWithInteger(4, 6);
-
+	print<type, arraySize>(result);*/
+	
 	auto devices = retrieveDevices();
 	std::cout << "Using device: " << devices[0].getInfo<CL_DEVICE_NAME>() << "\n";
 	auto& device = devices[0];
-	
-	cl::Context context({ device });
-	std::string kernelCode = "kernel void multiply(global int* array){"
-		"size_t id = (get_global_id(1) * get_global_size(0)) + get_global_id(0);"
-		"array[id] = array[id] * 5;"
-		"}";
 
-	cl::Program::Sources sources;
-	sources.push_back({ kernelCode.c_str(),kernelCode.length() });
+	const size_t dim = 3;
+	using type = int;
 
-	cl::Program program(context, sources);
-	if (program.build("-cl-std=CL1.2") != CL_SUCCESS) {
-		std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) << "\n";
-		exit(1);
-	}
+	MatrixGenerator<type, dim> generator1;
+	generator1.initWithInteger(4, 6);
+	auto matrix1 = generator1.getMatrix();
+	print<type, dim>(matrix1);
 
-	auto matrix = generator.getMatrix();
-	print(matrix);
-	cl::Buffer buffer(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * matrix.size() * matrix.size(), matrix.data());
-	cl::Kernel kernel(program, "multiply");
-	kernel.setArg(0, buffer);
+	MatrixGenerator<type, dim> generator2;
+	generator2.initWithInteger(4, 6);
+	auto matrix2 = generator2.getMatrix();
+	print<type, dim>(matrix2);
 
-	cl::CommandQueue queue(context, device);
-	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(matrix.size(), matrix.size()));
-	queue.enqueueReadBuffer(buffer, CL_TRUE, 0, sizeof(int) * matrix.size() * matrix.size(), matrix.data());
-	print(matrix);*/
+	auto matrix3 = performMultiplyProgram<type, dim>(device, matrix1, matrix2);
+	print<type, dim>(matrix3);
 
 	return 0;
 }

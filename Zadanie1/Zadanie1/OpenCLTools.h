@@ -54,4 +54,43 @@ std::array<T, dim> performAddProgram(cl::Device& device, const std::array<T, dim
 	return result;
 }
 
+template <typename T, std::size_t dim>
+std::array<std::array<T, dim>, dim> performMultiplyProgram(cl::Device& device, std::array<std::array<T, dim>, dim>& matrixA,
+	std::array<std::array<T, dim>, dim>& matrixB)
+{
+	cl::Context context({ device });
+	std::string kernelCode = "kernel void multiply(global " + std::string(typeid(T).name()) + "* arrayA, "
+		"global " + std::string(typeid(T).name()) + "* arrayB, global " + std::string(typeid(T).name()) + "* arrayC){"
+		"size_t id = (get_global_id(1) * get_global_size(0)) + get_global_id(0);"
+		"arrayC[id] = arrayA[id] + arrayB[id];"
+		"}";
+
+	cl::Program::Sources sources;
+	sources.push_back({ kernelCode.c_str(),kernelCode.length() });
+
+	cl::Program program(context, sources);
+	if (program.build("-cl-std=CL1.2") != CL_SUCCESS) {
+		std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) << "\n";
+		exit(1);
+	}
+
+	cl::Buffer bufferMA(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(T) * dim * dim, matrixA.data());
+	cl::Buffer bufferMB(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(T) * dim * dim, matrixB.data());
+
+	std::array<std::array<T, dim>, dim> matrixC;
+	cl::Buffer bufferMC(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(T) * dim * dim, matrixC.data());
+
+	cl::Kernel kernel(program, "multiply");
+	kernel.setArg(0, bufferMA);
+	kernel.setArg(1, bufferMB);
+	kernel.setArg(2, bufferMC);
+
+	cl::CommandQueue queue(context, device);
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(dim, dim));
+	queue.enqueueReadBuffer(bufferMC, CL_TRUE, 0, sizeof(T) * dim * dim, matrixC.data());
+
+	return matrixC;
+}
+
+
 #endif // !OPENCLTOOLS_H
