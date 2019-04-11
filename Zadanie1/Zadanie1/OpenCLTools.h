@@ -60,10 +60,19 @@ std::array<std::array<T, dim>, dim> performMultiplyProgram(cl::Device& device, s
 {
 	cl::Context context({ device });
 	std::string kernelCode = "kernel void multiply(global " + std::string(typeid(T).name()) + "* arrayA, "
-		"global " + std::string(typeid(T).name()) + "* arrayB, global " + std::string(typeid(T).name()) + "* arrayC){"
-		"size_t id = (get_global_id(1) * get_global_size(0)) + get_global_id(0);"
-		"arrayC[id] = arrayA[id] + arrayB[id];"
-		"}";
+		"global " + std::string(typeid(T).name()) + "* arrayB, "
+		"global " + std::string(typeid(T).name()) + "* arrayC, "
+		"size_t dim1, size_t dim2) {"
+			"size_t tx = get_global_id(0);"
+			"size_t ty = get_global_id(1);"
+			"" + std::string(typeid(T).name()) + " value = 0;"
+			"for (size_t k = 0; k < dim1; ++k){"
+				"" + std::string(typeid(T).name()) + " itemA = arrayA[ty * dim1 + k];"
+				"" + std::string(typeid(T).name()) + " itemB = arrayB[k * dim2 + tx];"
+				"value += itemA * itemB;"
+			"}"
+			"arrayC[ty * dim1 + tx] = value;"
+			"}";
 
 	cl::Program::Sources sources;
 	sources.push_back({ kernelCode.c_str(),kernelCode.length() });
@@ -84,6 +93,8 @@ std::array<std::array<T, dim>, dim> performMultiplyProgram(cl::Device& device, s
 	kernel.setArg(0, bufferMA);
 	kernel.setArg(1, bufferMB);
 	kernel.setArg(2, bufferMC);
+	kernel.setArg(3, dim);
+	kernel.setArg(4, dim);
 
 	cl::CommandQueue queue(context, device);
 	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(dim, dim));
