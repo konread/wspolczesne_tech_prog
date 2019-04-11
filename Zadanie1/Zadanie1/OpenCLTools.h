@@ -3,13 +3,14 @@
 
 #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 
-#include <vector>
+#include <array>
 #include "CL/cl.hpp"
+#include "MatrixGenerator.h"
 
 std::vector<cl::Device> retrieveDevices();
 
-template<typename T>
-std::vector<T> performAddProgram(cl::Device& device, const std::vector<T>& arrayA, const std::vector<T>& arrayB)
+template <typename T, std::size_t dim>
+std::array<T, dim> performAddProgram(cl::Device& device, const std::array<T, dim>& arrayA, const std::array<T, dim>& arrayB)
 {
 	cl::Context context({ device });
 
@@ -27,33 +28,30 @@ std::vector<T> performAddProgram(cl::Device& device, const std::vector<T>& array
 		exit(1);
 	}
 
-	size_t arraySize = arrayA.size();
-
 	// create buffers on the device
-	cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(T) * arraySize);
-	cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(T) * arraySize);
-	cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(T) * arraySize);
+	cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(T) * dim);
+	cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(T) * dim);
+	cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(T) * dim);
 
 	//create queue to which we will push commands for the device.
 	cl::CommandQueue queue(context, device);
 
 	//write arrays A and B to the device
-	queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(T) * arraySize, arrayA.data());
-	queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(T) * arraySize, arrayB.data());
+	queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(T) * dim, arrayA.data());
+	queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(T) * dim, arrayB.data());
 
 	//run the kernel
 	cl::Kernel kernel(program, "add");
 	kernel.setArg(0, buffer_A);
 	kernel.setArg(1, buffer_B);
 	kernel.setArg(2, buffer_C);
-	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(arraySize), cl::NullRange);
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(dim), cl::NullRange);
 	queue.finish();
 
-	std::vector<T> result(arraySize);
-	queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(T) * arraySize, result.data());
+	std::array<T, dim> result;
+	queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(T) * dim, result.data());
 	
 	return result;
 }
 
 #endif // !OPENCLTOOLS_H
-

@@ -1,46 +1,40 @@
 #ifndef MATRIXGENERATOR_H
 #define MATRIXGENERATOR_H
 
-#include <vector>
+#include <array>
 #include <random>
 #include <iostream>
 
-template<typename T>
+template <typename T, std::size_t dim>
 class MatrixGenerator {
 public:
-	MatrixGenerator(size_t dim);
+	MatrixGenerator();
 
-	const std::vector<std::vector<T>> getMatrix() const;
+	const std::array<std::array<T, dim>, dim>& getMatrix() const;
 
 	void initWithReal(T from, T to);
 	void initWithInteger(T from, T to);
 
-	void print();
-
-	size_t dim() const;
-
 private:
-	std::vector<std::vector<T>> m_matrix;
+	std::array<std::array<T, dim>, dim> m_matrix;
 };
 
-template<typename T>
-MatrixGenerator<T>::MatrixGenerator(size_t dim)
+template <typename T, std::size_t dim>
+MatrixGenerator<T, dim>::MatrixGenerator()
 {
-	for (size_t i = 0; i < dim; ++i) {
-		std::vector<T> row;
-		row.resize(dim);
-		m_matrix.emplace_back(row);
+	for (auto& array: m_matrix) {
+		array.fill(0);
 	}
 }
 
-template<typename T>
-const std::vector<std::vector<T>> MatrixGenerator<T>::getMatrix() const
+template <typename T, std::size_t dim>
+const std::array<std::array<T, dim>, dim>& MatrixGenerator<T,dim>::getMatrix() const
 {
 	return m_matrix;
 }
 
-template<typename T>
-void MatrixGenerator<T>::initWithReal(T from, T to)
+template <typename T, std::size_t dim>
+void MatrixGenerator<T, dim>::initWithReal(T from, T to)
 {
 	std::random_device rd;  //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -55,8 +49,8 @@ void MatrixGenerator<T>::initWithReal(T from, T to)
 	}
 }
 
-template<typename T>
-void MatrixGenerator<T>::initWithInteger(T from, T to)
+template <typename T, std::size_t dim>
+void MatrixGenerator<T, dim>::initWithInteger(T from, T to)
 {
 	std::random_device rd;  //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -69,23 +63,6 @@ void MatrixGenerator<T>::initWithInteger(T from, T to)
 			m_matrix[i][j] = dis(gen);
 		}
 	}
-}
-
-template<typename T>
-void MatrixGenerator<T>::print()
-{
-	for (auto& row : m_matrix) {
-		for (auto& item : row) {
-			std::cout << item << " ";
-		}
-		std::cout << "\n";
-	}
-}
-
-template<typename T>
-size_t MatrixGenerator<T>::dim() const
-{
-	return m_matrix.size();
 }
 
 #endif // !MATRIXGENERATOR_H
