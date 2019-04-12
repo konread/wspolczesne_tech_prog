@@ -1,5 +1,6 @@
 #include "OpenCLTools.h"
 #include <array>
+#include "Timer.h"
 
 template <typename T, std::size_t dim>
 void print(const std::array<T, dim>& array)
@@ -41,21 +42,31 @@ int main() {
 	std::cout << "Using device: " << devices[0].getInfo<CL_DEVICE_NAME>() << "\n";
 	auto& device = devices[0];
 
-	const size_t dim = 3;
+	const size_t dim = 5;
 	using type = int;
 
+	std::cout << "Preparation of matrix A" << std::endl;
 	MatrixGenerator<type, dim> generator1;
-	generator1.initWithInteger(4, 6);
+	generator1.initWithInteger(1, 4);
 	auto matrix1 = generator1.getMatrix();
-	print<type, dim>(matrix1);
+	//print<type, dim>(matrix1);
 
+	std::cout << "Preparation of matrix B" << std::endl;
 	MatrixGenerator<type, dim> generator2;
 	generator2.initWithInteger(4, 6);
 	auto matrix2 = generator2.getMatrix();
-	print<type, dim>(matrix2);
+	//print<type, dim>(matrix2);
 
-	auto matrix3 = performMultiplyProgram<type, dim>(device, matrix1, matrix2);
-	print<type, dim>(matrix3);
+	std::cout << "Starting calculations" << std::endl;
+	std::cout << "Multiplying matrix in onet thread:" << std::endl;
+	Timer timer;
+	multiplyingMatrixInOneThread(matrix1, matrix2);
+	std::cout << "End. Duration " << timer.elapsed() << " in seconds" << std::endl;
+
+	std::cout << "Multiplying matrix in GPU:" << std::endl;
+	timer.reset();
+	performMultiplyProgram<type, dim>(device, matrix1, matrix2);
+	std::cout << "End. Duration " << timer.elapsed() << " in seconds" << std::endl;
 
 	return 0;
 }

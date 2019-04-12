@@ -10,6 +10,26 @@
 std::vector<cl::Device> retrieveDevices();
 
 template <typename T, std::size_t dim>
+std::array < std::array<T, dim>, dim> multiplyingMatrixInOneThread(const std::array < std::array<T, dim>, dim>& matrixA, 
+	const std::array < std::array<T, dim>, dim>& matrixB)
+{
+	std::array < std::array<T, dim>, dim> matrixC;
+
+	for (size_t i = 0; i < dim; ++i) {
+		for (size_t j = 0; j < dim; ++j) {
+			T value = 0;
+			for (size_t k = 0; k < dim; ++k) {
+				value += matrixA[i][k] * matrixB[k][j];
+			}
+
+			matrixC[i][j] = value;
+		}
+	}
+
+	return matrixC;
+}
+
+template <typename T, std::size_t dim>
 std::array<T, dim> performAddProgram(cl::Device& device, const std::array<T, dim>& arrayA, const std::array<T, dim>& arrayB)
 {
 	cl::Context context({ device });
